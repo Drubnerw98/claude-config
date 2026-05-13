@@ -8,9 +8,11 @@ Keep this file tight: it loads on every conversation.
 Self-taught dev shipping portfolio projects toward startup / agency roles.
 Strong product instincts; solid TypeScript + React + Node. Comfortable
 shipping AI features end-to-end — structured output, multi-step flows,
-extraction pipelines — not just consuming SDKs. Defending architectural
-decisions in interviews matters as much as feature shipping — treat me
-like a senior collaborator who appreciates pushback.
+extraction pipelines — not just consuming SDKs. Less depth on infra /
+DevOps and ML / data-science fundamentals — over-explain there rather
+than assume. Defending architectural decisions in interviews matters
+as much as feature shipping — treat me like a senior collaborator who
+appreciates pushback.
 
 ## How to talk to me
 
@@ -44,6 +46,10 @@ like a senior collaborator who appreciates pushback.
   Query" is incomplete. "Tanstack Query over SWR because we need
   mutations and optimistic updates" surfaces the decision for me to
   challenge.
+- **Brief plan before any multi-step work.** What you'll do, in what
+  order, what you're choosing not to do. Doesn't have to be long —
+  3-5 bullets. Gives me a chance to redirect before you've sunk
+  effort into the wrong approach.
 
 ## Engineering principles to enforce
 
@@ -259,6 +265,11 @@ CLAUDE.md overrides.
 
 - **Typecheck + (if frontend) build before claiming work done.** Failures
   the type system would catch are not allowed to leak into commits.
+- **Review your own diff before claiming done.** Read the change as if
+  you're a reviewer seeing it cold. Catches accidentally-deleted code,
+  stray debug statements, leftover TODO comments, and the "fixed the
+  symptom not the cause" pattern. More bugs land in diffs than in
+  typechecks.
 - **Before changing a function signature, surface the call sites first.**
   Grep them, list them, agree on the migration plan — *then* change
   the signature. Avoids the "fixed one site, broke five others"
@@ -280,12 +291,12 @@ CLAUDE.md overrides.
 
 ## Things to never do
 
-- Generate URLs you're not certain of (model IDs from training, blog post
-  permalinks, framework changelog anchors). When in doubt, give the search
-  term, not a link.
-- Construct date-suffixed model IDs from training data (e.g.
-  `claude-sonnet-4-5-20250514`). Use the bare ID; check the Models API or
-  ask if unsure.
+- Hallucinate identifiers — URLs, model IDs, package versions, file
+  paths, or anything else you'd be tempted to construct from training
+  data. Specific failure modes: date-suffixed model IDs
+  (`claude-sonnet-4-5-20250514`), blog post permalinks, framework
+  changelog anchors. When in doubt, give me the search term, not a
+  guessed link.
 - Run destructive shell commands (`rm -rf`, `git reset --hard`,
   `git push --force`, `DROP TABLE`) without explicit confirmation.
 - Default to spinning up dev servers after edits. I prefer ship → push →
@@ -308,11 +319,12 @@ CLAUDE.md overrides.
 
 If there's no project-level CLAUDE.md, default to:
 
-- **Stack**: TypeScript everywhere. Vite + React for SPAs. Express or
-  Fastify for the API (Express if you need long-lived process semantics
-  like in-memory state, Fastify otherwise). Drizzle or Kysely for the DB
-  layer. Zod for validation. Clerk for auth on SaaS. Postgres on Neon.
-  Tailwind for styling. Pino for logs.
+- **Stack**: TypeScript everywhere. Vite + React for SPAs. Fastify for
+  the API (matches `reaching-for-backend-patterns` skill — Awilix DI,
+  Zod request validation, typed errors). Drizzle for the DB layer
+  (reach for Kysely only when queries fight Drizzle's API). Zod for
+  validation. Clerk for auth on SaaS. Postgres on Neon. Tailwind for
+  styling. Pino for logs.
 - **Layout**: pnpm monorepo with `apps/` + `packages/`. Shared types in
   `packages/shared`. ESLint flat config + Prettier at the repo root.
 - **Hygiene from day one**: `pnpm typecheck`, `pnpm lint`, `pnpm test`,
