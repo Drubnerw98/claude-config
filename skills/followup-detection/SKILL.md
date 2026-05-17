@@ -1,6 +1,7 @@
 ---
 name: followup-detection
 description: Use when noticing items during work that don't belong in current scope but shouldn't be lost — phrases like "we should follow up on X" or "worth revisiting Y", side tangents during brainstorming, deferred concerns in out-of-scope spec sections, small feature requests, gaps noticed during code review, Jira tickets containing "follow up" language. Captures the deferred item to <repo>/docs/followups.md so it survives being read cold months later.
+version: 1
 ---
 
 # Followup detection
@@ -28,7 +29,7 @@ Project-scoped, in `<repo>/docs/followups.md`. Versioned with the code so PR rev
 
 1. Append a structured entry to `<repo>/docs/followups.md` under `## Active`, creating the file (with the scaffold below) if absent. Use the entry template — thin bullets become "dotted outlines of where an idea used to be" within weeks; useless when revisited.
 2. Update the `## Contents` ToC with a link to the new entry.
-3. Tell drub, one line: "noted in docs/followups.md".
+3. Tell the user, one line: "noted in docs/followups.md".
 
 ## Entry template
 
@@ -90,4 +91,4 @@ Format: see the followup-detection skill in ~/.claude/skills/followup-detection/
 
 ## At the start of substantial new work
 
-Skim `docs/followups.md` for items relevant to the current task. Some may be ready to fold in; others worth flagging to drub before scoping.
+Skim `docs/followups.md` for items relevant to the current task. Some may be ready to fold in; others worth flagging to the user before scoping.

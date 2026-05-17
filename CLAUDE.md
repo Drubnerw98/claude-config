@@ -81,60 +81,10 @@ Apply by default. Flag when I deviate.
 
 ## AI features
 
-Most of my portfolio work has real AI in it (extraction, refinement,
-recommendation, consensus). Defaults below apply unless project-level
-CLAUDE.md overrides.
-
-- **Opus first, optimize later.** Don't propose Sonnet/Haiku swaps
-  unsolicited even for "background" work. Match real output quality
-  first, cost-optimize once the feature ships and traffic exists.
-- **Zod schema + native tool use** for any AI call with structured
-  output. One Zod schema describes the tool input, validates the
-  response at runtime, and lives in `packages/shared/` if reused
-  across server + client. Don't hand-roll JSON schemas alongside Zod.
-- **Failure-mode-by-name in prompts.** When the model has a known
-  failure mode, name it in a diagnostic phrase. ("Don't include items
-  only to meet volume requirement" beats 50 abstract instructions.)
-  Each named failure mode references a real prior regression, not a
-  hypothetical.
-- **Retry once with same params, then fail loudly.** No silent retries,
-  no fallback to a degraded result unless the feature is explicitly
-  designed around degradation. Surface the failure to the user; let
-  them trigger again or queue a retry.
-- **User-blocking if latency is acceptable, background otherwise.**
-  Sub-2s call with high success rate = block. Anything slower, flakier,
-  or batch-shaped = job + status polling. Resonance's extraction is
-  background; Ensemble's per-turn evaluation is blocking.
-- **Stream when the user is watching text appear** — chat responses,
-  generations, rewrites. The perceived-latency win is real and free.
-  Skip streaming for background jobs (no one's watching) and for
-  structured output via tool use (you need the whole response before
-  parsing — streaming adds complexity for no UX gain).
-- **Temperature: low for reproducibility, default otherwise.** Tasks
-  you'd want to eval reproducibly — extraction, classification,
-  structured output, code gen — use temp **0.2**, not 0. Pure 0 can
-  trigger repetition loops in some patterns. Everything else trusts
-  the model default.
-- **Multi-step loops only when the task genuinely needs steps.** One
-  well-crafted call with full context beats a chained orchestration
-  most of the time. Reach for tool use loops when there's real
-  lookup / research / iteration to do. Don't build agentic
-  architecture for one-shot tasks dressed up as multi-step.
-- **Log per-call cost from day one.** Cheap to wire when the call site
-  is fresh; awful to retrofit. Capture model, input/output token
-  counts, cost in cents, and a feature-name tag. Pin the model ID in
-  the log (no `claude-opus-latest`).
-- **Prompt caching: skip until the feature has volume.** Once a stable
-  system prompt + few-shots get reused across thousands of requests,
-  add cache breakpoints. Until then it's premature optimization.
-- **Evals are lightweight but real.** A small folder of fixture inputs
-  + expected output shapes, run manually before shipping prompt
-  changes. Not CI yet. Push toward golden datasets + automated diff
-  reports when a feature actually has users and prompt churn.
-- **Schema-as-contract still applies.** AI output is an external
-  boundary. Validate every response with the same Zod schema that
-  defined the tool. Don't trust `model.parsedResponse` blindly —
-  reparse and check.
+See `reaching-for-ai-features` skill — fires whenever AI call code is
+touched. Covers Opus-first, Zod-as-tool, named failure modes, retry-
+once-fail-loudly, blocking vs background, streaming rules, temperature
+defaults, per-call cost logging, prompt caching, evals.
 
 ## Testing
 
@@ -176,68 +126,17 @@ CLAUDE.md overrides.
 
 ## Schema and migrations
 
-- **Drizzle by default.** Schema-first ergonomics, migrations + types
-  from one definition, readable SQL output (satisfies the editable-
-  migrations principle). Resonance uses it; new projects start here.
-- **Reach for Kysely when queries fight Drizzle's API** — heavy CTEs,
-  window functions, dynamic query construction, or joining an existing
-  DB where redefining the schema in TS is wasted work. Kysely and
-  Drizzle can coexist in one project if needed.
-- **Editable SQL migrations only.** Whatever tool generates them, the
-  output should be plain SQL a human can read and patch. No ORMs or
-  migration tools that hide what's about to run.
-- **Numbered prefix + verb + subject** for migration filenames
-  (`0007_add_user_themes.sql`). Easy to scan in commits; matches
-  Drizzle's auto-generation pattern.
-- **Two-phase as the default for data-touching changes.** Schema
-  migration first, backfill as a separate migration. Each phase
-  reversible; backfill re-runnable idempotently. The discipline is
-  cheap and translates directly to production patterns later.
-  - **Combine into one migration** for tiny tables (low row counts)
-    where the backfill is trivial — the ceremony isn't worth it.
-  - **Escalate to expand-contract** (add new column, dual-write,
-    backfill async, drop old) when real traffic can't tolerate
-    downtime or backfill could lock for minutes. Pattern to know,
-    not to default to.
-- **Reference data in migrations, dev fixtures in seed scripts.**
-  Stable lookup tables (default categories, enum-as-table values,
-  initial admin user) ship with the migration as idempotent INSERTs.
-  Dev/test fixtures live in `seeds/` or equivalent, never shipped to
-  prod.
-- **Confirm before applying migrations against prod**, even additive
-  ones. They mutate shared state — and "additive" is harder to back
-  out than it looks once the app starts reading from the new column.
+See `reaching-for-database-patterns` skill — fires whenever schema or
+migration code is touched. Covers Drizzle default, Kysely escape hatch,
+editable SQL, numbered filenames, two-phase data-touching changes,
+reference data vs seed fixtures, prod-apply confirmation.
 
 ## Observability and logging
 
-- **Pino is the default logger.** Server and any long-running scripts.
-  No `console.log` in committed code outside `bin/` scripts.
-- **Always structured logs.** `logger.info({ userId, action, latencyMs },
-  'recommendation served')` — the message is the human-readable
-  headline, fields carry everything else. Strings are for humans;
-  fields are for the query interface you'll wish you had at 2am.
-- **Log level rule:**
-  - `info` — request boundaries, state changes, and anything you'd
-    want to see in prod after a deploy. The audit trail.
-  - `debug` — inner steps, intermediate values, hot-path counters.
-    Off by default in prod.
-  - `warn` — recoverable failure paths, retries, fallback usage.
-  - `error` — the centralized error handler logs these. See below.
-- **Request IDs are mandatory.** Every inbound request gets an ID at
-  the entry middleware, propagated through logs and into any AI
-  call's metadata. Lets you correlate "this user's slow recommendation"
-  with "this Anthropic call took 12s" without manual stitching. Cheap
-  to add early; awful to retrofit.
-- **Errors are thrown, not logged at the throw site.** Throw a
-  status-coded `Error & { status: number }`; the centralized error
-  handler logs it once with full request context. Double-logging
-  fragments the trail. Exception: at boundaries (queue consumers,
-  cron jobs) where there's no handler above you — log + rethrow with
-  context.
-- **What NOT to log:** auth headers, raw user input that might carry
-  PII, full AI prompts in production (token count + model + cost is
-  enough), full request bodies for endpoints handling sensitive data.
-  Logging is a data egress surface; treat it like one.
+See `reaching-for-observability` skill — fires whenever server logging,
+error-handler middleware, request-ID propagation, or AI-call metadata is
+touched. Covers Pino default, structured logs, log-level rules, request
+IDs, throw-not-log, PII discipline. Browser-side `console.log` is fine.
 
 ## Code style
 
@@ -276,7 +175,8 @@ CLAUDE.md overrides.
   pattern. Applies to renames, prop changes, return-type changes.
 - **Commit at meaningful checkpoints.** Bare one-line subject; body if
   needed; trailer:
-  `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
+  `Co-Authored-By: Claude <noreply@anthropic.com>`
+  (Model version omitted on purpose — would go stale at every bump.)
 - **Never push to remote unless I ask.** Exception: mid-deploy debugging
   where the change has to be live to test, and I've already greenlit the
   approach.

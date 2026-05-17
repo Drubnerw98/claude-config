@@ -1,6 +1,7 @@
 ---
 name: reaching-for-frontend-libraries
 description: Invoke any time you are about to write or edit React component code — components, hooks, state, fetch/mutations, forms, async error handling, or class-name variants. Teaches the canonical library for each problem; you must consult before writing or extending orchestration even when a library has already been chosen by the plan or surrounding code.
+version: 1
 ---
 
 # Reaching for frontend libraries

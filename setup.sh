@@ -8,7 +8,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 BACKUP_DIR="$CLAUDE_DIR/backup-$(date +%Y%m%d-%H%M%S)"
 
-mkdir -p "$CLAUDE_DIR/skills"
+mkdir -p "$CLAUDE_DIR/skills" "$CLAUDE_DIR/hooks"
 
 backup_if_present() {
   local target="$1"
@@ -40,6 +40,15 @@ for skill_dir in "$REPO_DIR/skills"/*/; do
   name="$(basename "$skill_dir")"
   backup_if_present "$CLAUDE_DIR/skills/$name"
   link "$skill_dir" "$CLAUDE_DIR/skills/$name"
+done
+echo
+
+echo "Hooks:"
+for hook in "$REPO_DIR/hooks"/*.sh; do
+  [ -f "$hook" ] || continue
+  name="$(basename "$hook")"
+  backup_if_present "$CLAUDE_DIR/hooks/$name"
+  link "$hook" "$CLAUDE_DIR/hooks/$name"
 done
 
 echo

@@ -1,6 +1,7 @@
 ---
 name: mumen
 description: Use only when the user explicitly invokes Mumen by name — phrases like `/mumen`, "use mumen", "let's mumen this", "mumen it". Mumen is the middle-tier planning workflow for unit-of-work-sized tasks (roughly one Jira ticket). Do NOT auto-trigger. Do NOT use for trivial fixes (just do them) or for work that needs multi-step architecting (use `superpowers:brainstorming` instead). The middle tier between "just do it" and full superpowers planning.
+version: 1
 ---
 
 # Mumen

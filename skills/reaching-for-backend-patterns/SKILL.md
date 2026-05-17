@@ -1,6 +1,7 @@
 ---
 name: reaching-for-backend-patterns
 description: Invoke any time you are about to write or edit Node backend code — routes, services, request/body validation, DB queries, error handling, config/env reads, or service wiring. Teaches the canonical layering (Fastify + Zod + Kysely + typed errors + Awilix DI); you must consult before writing in any of those locations even when libraries are already chosen by the plan or surrounding code.
+version: 1
 ---
 
 # Reaching for backend patterns
