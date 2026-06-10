@@ -35,7 +35,7 @@ You're about to write any of these:
 | **Retries** | Once with same params, then fail loudly |
 | **Latency posture** | Sub-2s + reliable → block. Slower / flakier / batch → background job + status polling |
 | **Streaming** | Stream chat / generation / rewrite. Skip for background jobs and structured-output tool calls |
-| **Temperature** | Eval-reproducible tasks (extraction, classification, code gen, structured output) → 0.2. Else → provider default |
+| **Temperature** | Opus 4.7+ / Fable: omit entirely — sampling params are removed and 400. Sonnet / Haiku: eval-reproducible tasks → 0.2, else provider default |
 | **Cost logging** | From day one: model, input/output tokens, cost in cents, feature-name tag, pinned model ID |
 | **Prompt caching** | Skip until the feature has volume |
 | **Eval coverage** | Lightweight fixture folder, run manually before prompt changes |
@@ -79,7 +79,12 @@ Examples from my projects: Resonance's extraction is background; Ensemble's per-
 
 ### Temperature
 
-- **0.2 not 0** for extraction, classification, code gen, structured output, and anything you'd want to eval reproducibly. Pure 0 can trigger repetition loops in some patterns.
+- **Opus 4.7+ and Fable 5: don't send it.** `temperature` / `top_p` / `top_k`
+  are removed on these models — the API returns a 400. Steer with the prompt
+  and `output_config.effort` instead.
+- **Sonnet / Haiku: 0.2 not 0** for extraction, classification, code gen,
+  structured output, and anything you'd want to eval reproducibly. Pure 0 can
+  trigger repetition loops in some patterns.
 - **Provider default** for everything else.
 
 ### Multi-step loops
@@ -93,10 +98,10 @@ Wire from day one — cheap when the call site is fresh, awful to retrofit. Capt
 ```ts
 logger.info({
   feature: 'resonance.extract',
-  model: 'claude-opus-4-7',           // pinned, never claude-opus-latest
+  model: 'claude-opus-4-8',           // pinned, never claude-opus-latest
   inputTokens: usage.input_tokens,
   outputTokens: usage.output_tokens,
-  costCents: computeCostCents(usage, 'claude-opus-4-7'),
+  costCents: computeCostCents(usage, 'claude-opus-4-8'),
   requestId,
 }, 'ai call complete');
 ```
@@ -119,7 +124,7 @@ Stop and reconsider when you hear yourself thinking any of these:
 | "I'll just JSON.parse the response, the prompt says return JSON" | Models return invalid JSON, prose explanations before the JSON, or partial JSON on early termination. Tool use eliminates the failure class; "the prompt says" doesn't. |
 | "I can hand-roll the JSON schema, Zod is overkill here" | You'll re-validate the response with Zod three weeks later when a downstream consumer breaks. Two schemas = two sources of truth = inevitable drift. One Zod schema, one place. |
 | "Quiet retry-on-failure makes the feature more robust" | It makes failures invisible. The user can't tell the call slow-failed twice; you can't tell whether the prompt regression is real or noise. Fail loudly, surface to the user. |
-| "Temperature 0 is the most deterministic, use it" | Temperature 0 can trigger repetition loops in some patterns. 0.2 is the eval-reproducibility default; 0 is a debugging tool, not a production setting. |
+| "Temperature 0 is the most deterministic, use it" | On Opus 4.7+/Fable the param is gone — sending it 400s. On Sonnet/Haiku, 0 can trigger repetition loops; 0.2 is the eval-reproducibility default, 0 is a debugging tool. |
 | "I'll add cost logging once the feature is in prod" | You won't. The call site won't have request context, the model ID will be stale, the feature tag will be wrong, and you'll be retrofitting under deadline pressure. Wire it on the first commit. |
 | "Let me add prompt caching while I'm here" | Caching pre-traffic is premature. The system prompt will change three more times before it stabilizes. Volume first, cache breakpoints second. |
 | "An agent loop is more flexible than a single call" | Flexibility you don't need is complexity you have to debug. One well-shaped call with full context wins until there's real iteration / lookup / research to do. |
@@ -132,7 +137,7 @@ Stop and reconsider when you hear yourself thinking any of these:
 - A `JSON.parse(response.content)` instead of Zod + tool use.
 - A `try/catch` around the AI call that returns a default value on failure.
 - Cost not logged at the call site (no `model`, `tokens`, `costCents` fields).
-- Temperature `0` (not `0.2`) for a task you'd eval reproducibly.
+- Any sampling param sent to Opus 4.7+/Fable (400s), or temperature `0` (not `0.2`) on Sonnet/Haiku for a task you'd eval reproducibly.
 - Prompt caching configured for a feature with no measurable volume yet.
 - A multi-step loop where one well-shaped call would have done it.
 - An eval fixture that asserts on output quality (those belong in evals, not the test suite — see Testing in CLAUDE.md).

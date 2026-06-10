@@ -2,7 +2,9 @@
 # Block `git push --force`/`-f` (not --force-with-lease) when the target
 # branch is main or master. If a branch is explicit, check that; otherwise
 # fall back to the current branch.
-cmd=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
+payload=$(cat)
+cmd=$(printf '%s' "$payload" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
+[ -z "$cmd" ] && cmd=$(printf '%s' "$payload" | python -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
 [ -z "$cmd" ] && exit 0
 
 # Extract the `git push ...` segment (stop at shell separators).

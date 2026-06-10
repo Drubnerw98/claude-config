@@ -83,8 +83,8 @@ Apply by default. Flag when I deviate.
 
 See `reaching-for-ai-features` skill — fires whenever AI call code is
 touched. Covers Opus-first, Zod-as-tool, named failure modes, retry-
-once-fail-loudly, blocking vs background, streaming rules, temperature
-defaults, per-call cost logging, prompt caching, evals.
+once-fail-loudly, blocking vs background, streaming rules, sampling rules
+(model-dependent), per-call cost logging, prompt caching, evals.
 
 ## Testing
 

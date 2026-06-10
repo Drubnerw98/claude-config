@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-cmd=$(python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
+payload=$(cat)
+cmd=$(printf '%s' "$payload" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
+[ -z "$cmd" ] && cmd=$(printf '%s' "$payload" | python -c "import json,sys; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
 echo "$cmd" | grep -qE '(^|[[:space:]])git[[:space:]]+commit\b.*[[:space:]]--amend([[:space:]]|=|$)' || exit 0
 git rev-parse '@{u}' >/dev/null 2>&1 || exit 0
 if git merge-base --is-ancestor HEAD '@{u}' 2>/dev/null; then
