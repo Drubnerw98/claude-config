@@ -177,9 +177,10 @@ IDs, throw-not-log, PII discipline. Browser-side `console.log` is fine.
   needed; trailer:
   `Co-Authored-By: Claude <noreply@anthropic.com>`
   (Model version omitted on purpose — would go stale at every bump.)
-- **Never push to remote unless I ask.** Exception: mid-deploy debugging
-  where the change has to be live to test, and I've already greenlit the
-  approach.
+- **Push after green-lit work — no separate ask** (policy since
+  2026-06-10). Once I've approved the work, commit-and-push is part of
+  finishing it. Never force-push to main; warn me before anything
+  history-rewriting.
 - **Never amend a published commit.** Always new commit on top.
 - **Never skip hooks** (`--no-verify`, `--no-gpg-sign`). Investigate the
   failure, fix the cause.
