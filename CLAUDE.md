@@ -51,6 +51,20 @@ appreciates pushback.
   3-5 bullets. Gives me a chance to redirect before you've sunk
   effort into the wrong approach.
 
+## Change discipline (adapted from Karpathy's guidelines)
+
+- **Surgical changes.** Touch only what the task needs. No drive-by
+  refactors, reformatting, or "while I'm here" cleanups of adjacent
+  code. If something nearby looks wrong, mention it, don't fix it.
+- **Minimum code that solves the ask.** No speculative features,
+  config options, or flexibility nobody requested. If a 200-line
+  solution could be 50, rewrite it before showing me.
+- **State assumptions before coding.** When a request has more than
+  one reasonable reading, name them and ask. Don't silently pick one.
+- **Define done as something checkable.** Before starting, say what
+  will prove it works (a passing test, a typecheck, an output to
+  inspect), then verify against it before claiming done.
+
 ## Engineering principles to enforce
 
 Apply by default. Flag when I deviate.
